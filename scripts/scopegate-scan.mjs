@@ -5,6 +5,7 @@
  *   node scripts/scopegate-scan.mjs <workspace-parent>
  *   node scripts/scopegate-scan.mjs . --json
  *   node scripts/scopegate-scan.mjs . --pack > cold-start.md
+ *   node scripts/scopegate-scan.mjs . --brief          # short LM paste
  *   node scripts/scopegate-scan.mjs . --fail-under=B
  *   node scripts/scopegate-scan.mjs . --out=pack.md
  */
@@ -20,6 +21,7 @@ import {
 const args = process.argv.slice(2);
 const json = args.includes('--json');
 const packOnly = args.includes('--pack');
+const briefOnly = args.includes('--brief');
 const failUnder = args.find((a) => a.startsWith('--fail-under='))?.split('=')[1];
 const outFile = args.find((a) => a.startsWith('--out='))?.split('=')[1];
 const pathArg = args.find((a) => !a.startsWith('--'));
@@ -89,9 +91,12 @@ const report = analyzeWorkspace({
   cursorRulesBytes: sumCursorRules(),
 });
 
-if (outFile) writeFileSync(outFile, report.coldStart, 'utf8');
+const outBody = briefOnly ? report.briefing : report.coldStart;
+if (outFile) writeFileSync(outFile, outBody, 'utf8');
 
-if (packOnly) {
+if (briefOnly) {
+  process.stdout.write(report.briefing.endsWith('\n') ? report.briefing : report.briefing + '\n');
+} else if (packOnly) {
   process.stdout.write(report.coldStart.endsWith('\n') ? report.coldStart : report.coldStart + '\n');
 } else if (json) {
   console.log(JSON.stringify(report, null, 2));
@@ -109,14 +114,16 @@ if (packOnly) {
   }
   const m = report.metrics;
   if (m.fullTok > m.coldTok && m.commsTok > 0) {
-    const pct = Math.round((1 - m.coldTok / m.fullTok) * 100);
+    const pct = m.savingsPct || Math.round((1 - m.coldTok / m.fullTok) * 100);
     console.log(
       `\nLoad budget  cold-start ~${m.coldTok} tok  vs full AGENTS+comms ~${m.fullTok} tok  (≈${pct}% less if pin-only)`,
     );
   }
+  console.log('\n--- Agent briefing (paste) ---\n');
+  console.log(report.briefing);
   console.log('\n--- Cold start pack ---\n');
   console.log(report.coldStart);
-  if (outFile) console.error(`Wrote pack: ${outFile}`);
+  if (outFile) console.error(`Wrote: ${outFile}`);
 }
 
 if (failUnder) {

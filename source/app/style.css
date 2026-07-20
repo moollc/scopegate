@@ -168,7 +168,69 @@ li.bad {
   margin-top: 0.15rem;
 }
 
-#pack {
+.panel-note {
+  margin: 0 0 0.5rem;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.budget {
+  margin-top: 1rem;
+}
+
+.budget-label {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin-bottom: 0.4rem;
+}
+
+.budget-track {
+  height: 12px;
+  border-radius: 6px;
+  background: linear-gradient(90deg, #3d2a2a 0%, #5a3030 100%);
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+
+.budget-fill.cold {
+  height: 100%;
+  background: linear-gradient(90deg, #2a6b4a, var(--ok));
+  min-width: 2px;
+  transition: width 0.25s ease;
+}
+
+.budget-legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+  margin: 0.45rem 0 0;
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+.swatch {
+  display: inline-block;
+  width: 0.65rem;
+  height: 0.65rem;
+  border-radius: 2px;
+  margin-right: 0.2rem;
+  vertical-align: middle;
+}
+
+.swatch.cold {
+  background: var(--ok);
+}
+
+.swatch.hot {
+  background: #8b4040;
+}
+
+#pack,
+#brief {
   white-space: pre-wrap;
   font-family: var(--mono);
   font-size: 0.8rem;
@@ -176,7 +238,7 @@ li.bad {
   border-radius: 8px;
   padding: 0.85rem;
   border: 1px solid var(--border);
-  max-height: 28rem;
+  max-height: 22rem;
   overflow: auto;
   margin: 0;
 }

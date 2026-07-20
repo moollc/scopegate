@@ -439,22 +439,80 @@ export function analyzeWorkspace(input) {
     scores,
   });
 
-  return {
+  const metrics = {
+    agentsLines,
+    agentsTok,
+    commsTok,
+    pinTok,
+    coldTok,
+    fullTok,
+    extraOpen,
+    savingsPct:
+      fullTok > coldTok && fullTok > 0 ? Math.round((1 - coldTok / fullTok) * 100) : 0,
+  };
+
+  const report = {
     rootName,
     grade,
     scores,
     findings,
     coldStart,
-    metrics: {
-      agentsLines,
-      agentsTok,
-      commsTok,
-      pinTok,
-      coldTok,
-      fullTok,
-      extraOpen,
-    },
+    metrics,
   };
+  report.briefing = buildAgentBriefing(report);
+  return report;
+}
+
+/**
+ * Short paste for a new LM session — not the full pack.
+ * Models should open listed paths; not re-ingest archives.
+ */
+export function buildAgentBriefing(report) {
+  const m = report.metrics || {};
+  const open = [];
+  if (report.coldStart) {
+    // re-derive from scores/metrics for stability
+  }
+  const lines = [];
+  lines.push(`# Agent briefing — ${report.rootName} (grade ${report.grade})`);
+  lines.push('');
+  lines.push('You are starting a session in this workspace. Follow context-load discipline:');
+  lines.push('');
+  lines.push('## Open only');
+  lines.push('');
+  // Parse open-first section is fragile; build from metrics + pack heuristics
+  const pack = report.coldStart || '';
+  const openMatch = pack.match(/## Open first\n\n([\s\S]*?)\n## /);
+  if (openMatch) {
+    lines.push(openMatch[1].trim());
+  } else {
+    lines.push('1. `AGENTS.md`');
+    lines.push('2. Comms pin / latest handoff only');
+  }
+  lines.push('');
+  if (m.fullTok > m.coldTok) {
+    lines.push(
+      `## Load budget: ~${m.coldTok} tok cold-start vs ~${m.fullTok} if you dump AGENTS+full comms (≈${m.savingsPct}% waste avoided).`,
+    );
+    lines.push('');
+  }
+  lines.push('## Do not');
+  lines.push('');
+  lines.push('- Dump the monorepo, full comms archive, or host auto-memory into context.');
+  lines.push('- Re-explain conventions already in AGENTS.md.');
+  lines.push('- Commit machine-specific absolute paths into shared docs.');
+  lines.push('');
+  const fixes = (report.findings || []).slice(0, 5);
+  if (fixes.length) {
+    lines.push('## Process flags (from Scopegate)');
+    lines.push('');
+    fixes.forEach((f, i) => lines.push(`${i + 1}. ${f}`));
+    lines.push('');
+  }
+  lines.push('Then do the user task. Prefer tools (grep/read) over bulk paste.');
+  lines.push('');
+  lines.push('_Scopegate briefing — paste at session start._');
+  return lines.join('\n');
 }
 
 /** Detect drive roots / file:// absolute locals (bad in shared git rule files) */

@@ -19,9 +19,14 @@ function render() {
   const gradeEl = $('grade');
   const hasPack = Boolean(state.report?.coldStart);
 
+  const briefBtn = $('brief-btn');
   $('copy-btn').disabled = !hasPack;
+  if (briefBtn) briefBtn.disabled = !hasPack;
   $('download-btn').disabled = !hasPack;
   $('rescan-btn').disabled = !state.canRescan;
+
+  const budget = $('budget');
+  const briefEl = $('brief');
 
   if (state.scanning) {
     status.textContent = 'Scanning…';
@@ -36,6 +41,8 @@ function render() {
     scoresEl.innerHTML = '';
     findingsEl.innerHTML = '';
     packEl.textContent = '';
+    if (briefEl) briefEl.textContent = '';
+    if (budget) budget.hidden = true;
     return;
   }
   if (!state.report) {
@@ -46,6 +53,8 @@ function render() {
     scoresEl.innerHTML = '';
     findingsEl.innerHTML = '';
     packEl.textContent = '';
+    if (briefEl) briefEl.textContent = '';
+    if (budget) budget.hidden = true;
     return;
   }
 
@@ -68,6 +77,24 @@ function render() {
     : '<li class="ok">No critical fixes suggested.</li>';
 
   packEl.textContent = r.coldStart;
+  if (briefEl) briefEl.textContent = r.briefing || '';
+
+  const m = r.metrics || {};
+  if (budget && m.fullTok > 0) {
+    budget.hidden = false;
+    const pct = Math.min(100, Math.round((m.coldTok / m.fullTok) * 100)) || 1;
+    const fill = $('budget-cold');
+    if (fill) fill.style.width = `${pct}%`;
+    const bt = $('budget-text');
+    if (bt) {
+      bt.textContent =
+        m.savingsPct > 0
+          ? `~${m.coldTok} cold / ~${m.fullTok} dump (≈${m.savingsPct}% less if pin-only)`
+          : `~${m.coldTok} tok cold-start`;
+    }
+  } else if (budget) {
+    budget.hidden = true;
+  }
 }
 
 function escapeHtml(s) {
@@ -192,14 +219,27 @@ async function onPick() {
   }
 }
 
+function flashBtn(id, label, temp) {
+  const btn = $(id);
+  if (!btn) return;
+  const prev = btn.textContent;
+  btn.textContent = temp;
+  setTimeout(() => {
+    btn.textContent = label || prev;
+  }, 1500);
+}
+
 function onCopy() {
   if (!state.report?.coldStart) return;
   navigator.clipboard.writeText(state.report.coldStart).then(() => {
-    const btn = $('copy-btn');
-    btn.textContent = 'Copied';
-    setTimeout(() => {
-      btn.textContent = 'Copy pack';
-    }, 1500);
+    flashBtn('copy-btn', 'Copy pack', 'Copied');
+  });
+}
+
+function onCopyBrief() {
+  if (!state.report?.briefing) return;
+  navigator.clipboard.writeText(state.report.briefing).then(() => {
+    flashBtn('brief-btn', 'Copy briefing', 'Copied');
   });
 }
 
@@ -243,6 +283,8 @@ export function boot() {
   state.canRescan = false;
   $('pick-btn').addEventListener('click', onPick);
   $('copy-btn').addEventListener('click', onCopy);
+  const briefBtn = $('brief-btn');
+  if (briefBtn) briefBtn.addEventListener('click', onCopyBrief);
   $('download-btn').addEventListener('click', onDownload);
   $('rescan-btn').addEventListener('click', onRescan);
   $('demo-good').addEventListener('click', () => onDemo('healthy'));
