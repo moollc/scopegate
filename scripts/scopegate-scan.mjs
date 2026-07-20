@@ -119,9 +119,10 @@ if (briefOnly) {
       `\nLoad budget  cold-start ~${m.coldTok} tok  vs full AGENTS+comms ~${m.fullTok} tok  (≈${pct}% less if pin-only)`,
     );
   }
-  console.log('\n--- Agent briefing (paste) ---\n');
+  // Single newlines around paste block — double blanks mid-briefing already removed in builder
+  console.log('--- Agent briefing (paste-safe; copy from next line to footer) ---');
   console.log(report.briefing);
-  console.log('\n--- Cold start pack ---\n');
+  console.log('--- Cold start pack (reference; prefer --brief alone for paste) ---');
   console.log(report.coldStart);
   if (outFile) console.error(`Wrote: ${outFile}`);
 }
