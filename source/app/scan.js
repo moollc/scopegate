@@ -25,6 +25,20 @@ const KIT_CUE_PATHS = [
   'scaffolds/MULTI-CLI.md',
   'scripts/verify-workspace.mjs',
   'scopegate/scripts/verify-workspace.mjs',
+  'START_HERE.md',
+  'work/ORCHESTRATION.md',
+  'DEVELOPER_WORKSPACE_RULES.md',
+];
+
+/** Multi-agent host tool dirs often present on heavy workspaces */
+const HOST_TOOL_DIRS = [
+  '.cursor',
+  '.claude',
+  '.grok',
+  '.agents',
+  '.clinerules',
+  '.qwen',
+  '.windsurf',
 ];
 
 export function estimateTokens(text) {
@@ -153,6 +167,26 @@ export function analyzeWorkspace(input) {
         detail: `${agentsLines} lines ≈${agentsTok} tok — prefer under ~200 lines`,
       });
       findings.push('Split procedures out of AGENTS.md into scaffold topic files.');
+    }
+
+    // Portable rules: absolute machine paths in always-on files are bad repo hygiene
+    if (hasLocalAbsolutePaths(agents)) {
+      scores.push({
+        id: 'portable-paths',
+        ok: false,
+        label: 'Absolute local paths in AGENTS.md',
+        detail: 'Machine-specific paths in always-on rules — prefer relative paths for git portability',
+      });
+      findings.push(
+        'Remove absolute local filesystem paths from AGENTS.md (and other committed rule files). Use relative paths only.',
+      );
+    } else {
+      scores.push({
+        id: 'portable-paths',
+        ok: true,
+        label: 'AGENTS.md paths look portable',
+        detail: 'No drive-letter / file:// machine roots detected',
+      });
     }
   } else {
     scores.push({
@@ -344,21 +378,43 @@ export function analyzeWorkspace(input) {
   const childVerify = Object.keys(files).some(
     (k) => k.endsWith('scripts/verify-workspace.mjs') && files[k] != null,
   );
-  if (hasMulti || childVerify) {
+  const startHere = files['START_HERE.md'] != null;
+  const orchestration = files['work/ORCHESTRATION.md'] != null;
+  const hostTools = HOST_TOOL_DIRS.filter((d) => topLevel.includes(d) || topLevel.includes(d.replace(/^\./, '')));
+  // .clinerules may be file or dir
+  const clinerules =
+    topLevel.includes('.clinerules') || files['.clinerules'] != null;
+
+  const cueBits = [
+    hasMulti && 'MULTI-CLI',
+    childVerify && 'verify-workspace',
+    startHere && 'START_HERE',
+    orchestration && 'ORCHESTRATION',
+    (hostTools.length || clinerules) &&
+      `hosts:${[...hostTools, clinerules ? '.clinerules' : null].filter(Boolean).join('+')}`,
+  ].filter(Boolean);
+
+  if (cueBits.length) {
     scores.push({
       id: 'kit-cues',
       ok: true,
-      label: 'Kit cues found',
-      detail: [hasMulti && 'MULTI-CLI', childVerify && 'verify-workspace'].filter(Boolean).join(', '),
+      label: 'Workspace tooling cues found',
+      detail: cueBits.join(', '),
     });
   } else if (agents != null) {
     scores.push({
       id: 'kit-cues',
       ok: true,
-      label: 'No multi-CLI / verify at scan depth',
+      label: 'No multi-CLI / START_HERE / host-tool dirs at scan depth',
       detail: 'Fine for simple tools',
     });
   }
+
+  // Cold-start third paths for multi-agent desks
+  const extraOpen = [];
+  if (startHere) extraOpen.push('START_HERE.md');
+  if (orchestration) extraOpen.push('work/ORCHESTRATION.md');
+  if (files['DEVELOPER_WORKSPACE_RULES.md'] != null) extraOpen.push('DEVELOPER_WORKSPACE_RULES.md');
 
   const okCount = scores.filter((s) => s.ok).length;
   const grade =
@@ -378,6 +434,7 @@ export function analyzeWorkspace(input) {
     pinTok,
     coldTok,
     fullTok,
+    extraOpen,
     findings,
     scores,
   });
@@ -395,8 +452,21 @@ export function analyzeWorkspace(input) {
       pinTok,
       coldTok,
       fullTok,
+      extraOpen,
     },
   };
+}
+
+/** Detect drive roots / file:// absolute locals (bad in shared git rule files) */
+export function hasLocalAbsolutePaths(text) {
+  if (!text) return false;
+  return (
+    /\b[A-Za-z]:\\/.test(text) ||
+    /\b[A-Za-z]:\//.test(text) ||
+    /file:\/\/\/[a-zA-Z]:/i.test(text) ||
+    /file:\/\/\/Users\//i.test(text) ||
+    /file:\/\/\/home\//i.test(text)
+  );
 }
 
 function buildColdStartPack({
@@ -408,6 +478,7 @@ function buildColdStartPack({
   pinTok,
   coldTok,
   fullTok,
+  extraOpen = [],
   findings,
   scores,
 }) {
@@ -427,21 +498,26 @@ function buildColdStartPack({
   }
   lines.push('## Open first');
   lines.push('');
-  if (agentsPath) lines.push(`1. \`${agentsPath}\` (≈${agentsLines} lines / ~${agentsTok} tokens) — binding rules`);
-  else lines.push('1. _(missing)_ `AGENTS.md` — create before multi-LM work');
+  let n = 1;
+  if (agentsPath) lines.push(`${n++}. \`${agentsPath}\` (≈${agentsLines} lines / ~${agentsTok} tokens) — binding rules`);
+  else lines.push(`${n++}. _(missing)_ \`AGENTS.md\` — create before multi-LM work`);
   if (commsPath) {
     lines.push(
-      `2. \`${commsPath}\` — **pin / Start-here / latest handoff only**` +
+      `${n++}. \`${commsPath}\` — **pin / Start-here / latest handoff only**` +
         (pinTok ? ` (~${pinTok} tok head)` : ''),
     );
-  } else lines.push('2. _(missing)_ handoff file — add `scaffold/comms.md` pin');
-  lines.push('3. Task-specific files only after that (ticket, path the user named)');
+  } else lines.push(`${n++}. _(missing)_ handoff file — add \`scaffold/comms.md\` pin`);
+  for (const p of extraOpen) {
+    lines.push(`${n++}. \`${p}\` — orientation / orchestration (when doing multi-agent work)`);
+  }
+  lines.push(`${n++}. Task-specific files only after that (ticket, path the user named)`);
   lines.push('');
   lines.push('## Do not open by default');
   lines.push('');
   lines.push('- Full `WORKSPACE_SETUP.md` (genesis/repair only)');
   lines.push('- Entire comms archive / multi-month logs');
   lines.push('- Host auto-memory dumps as a substitute for shared rules');
+  lines.push('- Absolute machine paths in prompts or commits (use relative paths in git)');
   lines.push('');
   lines.push('## Health snapshot');
   lines.push('');
