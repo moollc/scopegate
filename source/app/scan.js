@@ -468,51 +468,42 @@ export function analyzeWorkspace(input) {
 /**
  * Short paste for a new LM session — not the full pack.
  * Models should open listed paths; not re-ingest archives.
+ *
+ * Paste-safe: single newlines only (no blank lines). Extra blank lines in terminal
+ * / chat paste often fire Enter mid-paste and truncate the briefing.
  */
 export function buildAgentBriefing(report) {
   const m = report.metrics || {};
-  const open = [];
-  if (report.coldStart) {
-    // re-derive from scores/metrics for stability
-  }
   const lines = [];
   lines.push(`# Agent briefing — ${report.rootName} (grade ${report.grade})`);
-  lines.push('');
-  lines.push('You are starting a session in this workspace. Follow context-load discipline:');
-  lines.push('');
+  lines.push('Context-load only. Prefer tools over dumps. (Paste-safe: no blank lines.)');
   lines.push('## Open only');
-  lines.push('');
-  // Parse open-first section is fragile; build from metrics + pack heuristics
   const pack = report.coldStart || '';
   const openMatch = pack.match(/## Open first\n\n([\s\S]*?)\n## /);
   if (openMatch) {
-    lines.push(openMatch[1].trim());
+    for (const row of openMatch[1].trim().split(/\r?\n/)) {
+      const t = row.trim();
+      if (t) lines.push(t);
+    }
   } else {
     lines.push('1. `AGENTS.md`');
     lines.push('2. Comms pin / latest handoff only');
   }
-  lines.push('');
   if (m.fullTok > m.coldTok) {
     lines.push(
-      `## Load budget: ~${m.coldTok} tok cold-start vs ~${m.fullTok} if you dump AGENTS+full comms (≈${m.savingsPct}% waste avoided).`,
+      `## Load budget: ~${m.coldTok} cold vs ~${m.fullTok} dump (≈${m.savingsPct}% less if pin-only)`,
     );
-    lines.push('');
   }
   lines.push('## Do not');
-  lines.push('');
-  lines.push('- Dump the monorepo, full comms archive, or host auto-memory into context.');
-  lines.push('- Re-explain conventions already in AGENTS.md.');
-  lines.push('- Commit machine-specific absolute paths into shared docs.');
-  lines.push('');
+  lines.push('- Dump monorepo / full comms archive / host auto-memory');
+  lines.push('- Re-explain conventions already in AGENTS.md');
+  lines.push('- Absolute machine paths in shared docs');
   const fixes = (report.findings || []).slice(0, 5);
   if (fixes.length) {
     lines.push('## Process flags (from Scopegate)');
-    lines.push('');
     fixes.forEach((f, i) => lines.push(`${i + 1}. ${f}`));
-    lines.push('');
   }
-  lines.push('Then do the user task. Prefer tools (grep/read) over bulk paste.');
-  lines.push('');
+  lines.push('Then do the user task. Prefer tools over bulk paste.');
   lines.push('_Scopegate briefing — paste at session start._');
   return lines.join('\n');
 }

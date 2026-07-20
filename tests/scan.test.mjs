@@ -86,4 +86,10 @@ describe('analyzeWorkspace', () => {
     assert.ok(r.briefing.includes('Open only') || r.briefing.includes('Open first'));
     assert.ok(r.metrics.savingsPct > 0);
   });
+
+  it('briefing is paste-safe (no blank lines)', () => {
+    const r = analyzeWorkspace(demoFixtures().layered);
+    assert.ok(!/\n\n/.test(r.briefing), 'blank lines break terminal/chat paste');
+  });
 });
+
