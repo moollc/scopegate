@@ -63,6 +63,17 @@ npm run scan -- . --fail-under=B
 
 Scanning `.` inside *this* repo grades the product folder, not a full multi-LM workspace parent. Point at the workspace you care about.
 
+### Safe comms archive (do not freehand trim)
+
+Scopegate will flag fat comms. **Do not** replace the live file until an archive is **byte- and hash-verified**.
+
+```bash
+npm run archive-comms -- "/path/to/your-workspace" --dry-run
+npm run archive-comms -- "/path/to/your-workspace"
+```
+
+Order enforced by the tool: **write full archive → verify size + SHA-256 → only then rewrite live** (keep pin/head + pointer to archive). Never deletes the archive. That hole (agent “compressed” without a verified copy) is why this command exists.
+
 ## Live demo (GitHub Pages)
 
 Deployed from **GitHub Actions** on push to `main`.

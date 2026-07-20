@@ -306,7 +306,9 @@ export function analyzeWorkspace(input) {
         label: 'Comms is a dump risk',
         detail: `${cLines} lines ≈${cTok} tok — load pin/head only (~${pinTok} tok)`,
       });
-      findings.push('Do not tell agents to read comms completely. Compress/archive old entries.');
+      findings.push(
+        'Do not tell agents to read comms completely. Archive with Scopegate safe-archive (never replace live before verified archive): `npm run archive-comms -- <workspace-parent>` (or --dry-run first).',
+      );
     } else {
       scores.push({ id: 'comms-size', ok: true, label: 'Comms size OK', detail: `≈${cTok} tok` });
     }
