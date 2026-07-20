@@ -1,0 +1,10 @@
+﻿# Local HTTPS (generated)
+build/certs/
+
+# Deploy output
+pipeline/deploy/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+*.log
