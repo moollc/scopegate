@@ -1,5 +1,5 @@
 import { pickWorkspace, readTextFile, mapFromWebkitFiles } from '../shared/file-bridge.js';
-import { context, folderPickHint, privacyFootnote, confirmLocalFileListPick } from '../shared/permissions.js';
+import { context, folderPickHint, privacyFootnote, fileListPickNote } from '../shared/permissions.js';
 import {
   analyzeWorkspace,
   RULE_CANDIDATES,
@@ -243,13 +243,35 @@ async function runScan(pick) {
 }
 
 async function onPick() {
+  const status = $('status');
+  if (status) {
+    status.textContent = 'Choose a local workspace folder…';
+    status.dataset.tone = 'muted';
+  }
   try {
     const pick = await pickWorkspace({
-      beforeFileListPick: () => confirmLocalFileListPick(),
+      beforeFileListPick: () => {
+        if (status) {
+          status.textContent = fileListPickNote();
+          status.dataset.tone = 'muted';
+        }
+      },
     });
     await runScan(pick);
   } catch (e) {
-    if (e?.name === 'AbortError') return;
+    if (e?.name === 'AbortError') {
+      // Was silent — looked like "open folder, nothing happens" when cancel raced the pick
+      state.error = null;
+      state.report = null;
+      state.scanning = false;
+      if (status) {
+        status.textContent =
+          'Folder pick cancelled or no files received. Try again, use Demo buttons, or: npm run scan -- <workspace>';
+        status.dataset.tone = 'muted';
+      }
+      return;
+    }
+    console.error('Scopegate pick/scan failed', e);
     setError(e);
     render();
   }
