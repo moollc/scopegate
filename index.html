@@ -27,6 +27,7 @@
         <button type="button" class="primary" id="pick-btn">Open workspace folder</button>
         <button type="button" id="rescan-btn">Rescan</button>
         <button type="button" id="copy-btn">Copy pack</button>
+        <button type="button" id="brief-btn" title="Short paste for a new LM session">Copy briefing</button>
         <button type="button" id="download-btn">Download .md</button>
         <button type="button" id="demo-good" title="No folder needed">Demo: healthy</button>
         <button type="button" id="demo-bad" title="No folder needed">Demo: sick</button>
@@ -40,6 +41,19 @@
           <span id="grade">—</span>
           <span class="detail">Overall process grade</span>
         </div>
+        <div id="budget" class="budget" hidden>
+          <div class="budget-label">
+            <span>Load budget</span>
+            <span id="budget-text"></span>
+          </div>
+          <div class="budget-track" aria-hidden="true">
+            <div id="budget-cold" class="budget-fill cold"></div>
+          </div>
+          <p class="budget-legend">
+            <span class="swatch cold"></span> cold-start
+            <span class="swatch hot"></span> full AGENTS + comms dump
+          </p>
+        </div>
       </section>
       <section class="panel">
         <h2>Scores</h2>
@@ -49,7 +63,12 @@
         <h2>Suggested fixes</h2>
         <ul id="findings"></ul>
       </section>
-      <section class="panel span-2">
+      <section class="panel">
+        <h2>Agent briefing</h2>
+        <p class="panel-note">Short paste for session start (not the full pack).</p>
+        <pre id="brief"></pre>
+      </section>
+      <section class="panel">
         <h2>Cold start pack</h2>
         <pre id="pack"></pre>
       </section>

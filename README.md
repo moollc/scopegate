@@ -34,6 +34,7 @@ From a **workspace parent** (folder with `AGENTS.md` / scaffold):
 # Pass any workspace *parent* (folder with AGENTS.md / work or scaffold). Use your paths.
 npm run scan -- "/path/to/your-workspace"
 npm run scan -- . --json
+npm run scan -- . --brief              # short paste for a new LM session
 npm run scan -- . --pack > cold-start.md
 npm run scan -- . --fail-under=B
 ```

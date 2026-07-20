@@ -79,4 +79,11 @@ describe('analyzeWorkspace', () => {
     const full = '## Resume pin\nfocus\n\n' + 'old\n'.repeat(5000);
     assert.ok(pinSlice(full).length < full.length);
   });
+
+  it('includes paste briefing and savings metrics', () => {
+    const r = analyzeWorkspace(demoFixtures().layered);
+    assert.ok(r.briefing.includes('Agent briefing'));
+    assert.ok(r.briefing.includes('Open only') || r.briefing.includes('Open first'));
+    assert.ok(r.metrics.savingsPct > 0);
+  });
 });
