@@ -47,10 +47,32 @@ header p {
   font-size: 0.9rem;
 }
 
+.actions-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.35rem;
+  max-width: min(100%, 36rem);
+}
+
 .actions {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
+  justify-content: flex-end;
+}
+
+.privacy-note {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--muted);
+  text-align: right;
+  line-height: 1.35;
+}
+
+footer code {
+  font-family: var(--mono);
+  font-size: 0.85em;
 }
 
 button {

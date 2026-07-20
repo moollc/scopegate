@@ -80,7 +80,7 @@ Deployed from **GitHub Actions** on push to `main`.
 
 - Site: https://moollc.github.io/scopegate/
 - Demos work without installing anything.
-- Folder open uses File System Access when available, else browser folder upload. Files stay local.
+- Folder open: **File System Access** (Chrome/Edge) grants a local read-only folder — only process paths are read. Fallback (`webkitdirectory`) may show an OS dialog labeled “Upload”; that is **not** a cloud upload — files stay in the tab. Prefer CLI for huge monorepos: `npm run scan -- <workspace-parent>`.
 - If folder pick fails: use demos or `npm run scan` locally.
 
 Pages source (one-time): repo **Settings → Pages → Source: GitHub Actions**.
