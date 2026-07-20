@@ -46,7 +46,8 @@ Deployed from **GitHub Actions** on every push to `main` (not a `gh-pages` branc
 
 - Site: https://moollc.github.io/scopegate/
 - Demos work in the browser without installing anything.
-- **Open workspace folder** needs a Chromium browser; files stay on your machine (File System Access API).
+- **Open workspace folder** uses the File System Access API when available, otherwise the browser’s folder upload (`webkitdirectory`). Files stay on your machine either way.
+- If folder pick still fails, use demos on the page or `npm run scan` locally.
 
 One-time (if the first Actions deploy fails on Pages permissions): repo **Settings → Pages → Source: GitHub Actions**.
 
