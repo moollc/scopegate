@@ -1,5 +1,7 @@
 # Scopegate
 
+[![GitHub](https://img.shields.io/badge/github-moollc%2Fscopegate-blue)](https://github.com/moollc/scopegate)
+
 **Pre-flight for multi-LM workspaces.** Local hybrid PWA: open a workspace folder, get a process grade, copy or download a **cold-start pack** any model should load first.
 
 - Is `AGENTS.md` thin enough?
