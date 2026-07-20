@@ -31,11 +31,14 @@ Opens `https://localhost:<port>` (Chrome/Edge for folder picker).
 From a **workspace parent** (folder with `AGENTS.md` / scaffold):
 
 ```bash
-npm run scan -- "G:/My Drive/Antigravity/onboardin-workspace"
+# Pass any workspace *parent* (folder with AGENTS.md / work or scaffold). Use your paths.
+npm run scan -- "/path/to/your-workspace"
 npm run scan -- . --json
 npm run scan -- . --pack > cold-start.md
 npm run scan -- . --fail-under=B
 ```
+
+Do not commit machine-specific absolute paths into this repo (docs, samples, or code).
 
 ## Verify (workspace kit levels)
 

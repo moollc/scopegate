@@ -7,6 +7,7 @@ import {
   pinSlice,
   hasResumePin,
   agentsLooksInverted,
+  hasLocalAbsolutePaths,
   demoFixtures,
 } from '../source/app/scan.js';
 
@@ -40,6 +41,16 @@ describe('inverted AGENTS', () => {
     const a =
       '# app\n\nFull process lives in `CLAUDE.md` + `GEMINI.md`.\n\n## Cold start\n1. CLAUDE\n';
     assert.equal(agentsLooksInverted(a), true);
+  });
+});
+
+describe('portable paths', () => {
+  it('flags drive-letter paths', () => {
+    assert.equal(hasLocalAbsolutePaths('root is X:\\Projects\\app'), true);
+    assert.equal(hasLocalAbsolutePaths('see `AGENTS.md` and scaffold/'), false);
+  });
+  it('flags file:// machine URLs', () => {
+    assert.equal(hasLocalAbsolutePaths('file:///c:/Users/someone/Desktop/x'), true);
   });
 });
 

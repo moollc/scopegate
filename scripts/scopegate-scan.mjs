@@ -65,6 +65,9 @@ const paths = new Set([
   ...KIT_CUE_PATHS,
   'WORKSPACE_SETUP.md',
   'package.json',
+  'START_HERE.md',
+  'work/ORCHESTRATION.md',
+  'DEVELOPER_WORKSPACE_RULES.md',
 ]);
 
 for (const name of topLevel) {
