@@ -1,24 +1,41 @@
 import { context } from './permissions.js';
 
 /**
- * Prefer showDirectoryPicker; fall back to <input webkitdirectory>.
+ * Prefer showDirectoryPicker (true local folder grant).
+ * Fall back to &lt;input webkitdirectory&gt; — OS may say "Upload"; data stays in-page.
  * Always call from a user gesture (click).
  *
- * @returns {Promise<{ kind: 'handle', handle: FileSystemDirectoryHandle } | { kind: 'files', rootName: string, files: File[] }>}
+ * @returns {Promise<
+ *   | { kind: 'handle', handle: FileSystemDirectoryHandle, access: 'directory-handle' }
+ *   | { kind: 'files', rootName: string, files: File[], access: 'local-file-list' }
+ * >}
  */
-export async function pickWorkspace() {
-  if (context.hasFilePicker) {
+export async function pickWorkspace(options = {}) {
+  const preferHandle = options.preferHandle !== false;
+
+  if (preferHandle && context.hasFilePicker) {
     try {
-      const handle = await window.showDirectoryPicker({ mode: 'read' });
-      return { kind: 'handle', handle };
+      const handle = await window.showDirectoryPicker({
+        mode: 'read',
+        id: 'scopegate-workspace',
+      });
+      return { kind: 'handle', handle, access: 'directory-handle' };
     } catch (e) {
       if (e?.name === 'AbortError') throw e;
       // API present but blocked (permissions, iframe, policy) → fall through
-      console.warn('showDirectoryPicker failed, trying webkitdirectory', e);
+      console.warn('showDirectoryPicker failed, trying local file-list pick', e);
     }
   }
 
   if (context.hasWebkitDirectory) {
+    if (typeof options.beforeFileListPick === 'function') {
+      const ok = options.beforeFileListPick();
+      if (ok === false) {
+        const err = new Error('Folder pick cancelled');
+        err.name = 'AbortError';
+        throw err;
+      }
+    }
     const files = await pickViaWebkitDirectory();
     if (!files.length) {
       const err = new Error('No folder selected');
@@ -26,7 +43,7 @@ export async function pickWorkspace() {
       throw err;
     }
     const rootName = rootNameFromWebkitFiles(files);
-    return { kind: 'files', rootName, files };
+    return { kind: 'files', rootName, files, access: 'local-file-list' };
   }
 
   throw new Error(
@@ -40,6 +57,8 @@ function pickViaWebkitDirectory() {
     input.type = 'file';
     input.setAttribute('webkitdirectory', '');
     input.setAttribute('directory', '');
+    // Hint for AT / some UAs — does not change OS "Upload" chrome on most browsers
+    input.setAttribute('aria-label', 'Choose local workspace folder for Scopegate (stays on device)');
     input.multiple = true;
     input.style.display = 'none';
     document.body.appendChild(input);
@@ -87,6 +106,7 @@ function rootNameFromWebkitFiles(files) {
 /**
  * Map of relative path → text for known paths (from webkit FileList).
  * Paths use forward slashes; strip the root folder prefix from webkitRelativePath.
+ * Only `wantedPaths` contents are read — not the whole tree as text.
  */
 export async function mapFromWebkitFiles(fileList, wantedPaths) {
   const byRel = new Map();

@@ -21,16 +21,22 @@
     <header>
       <div>
         <h1>Scopegate</h1>
-        <p>Pre-flight for multi-LM workspaces — grade process health, emit a cold-start pack.</p>
+        <p>
+          Pre-flight for multi-LM workspaces — grade process health, emit a cold-start pack.
+          Opens a <strong>local</strong> folder; does not upload your repo to the cloud.
+        </p>
       </div>
-      <div class="actions">
-        <button type="button" class="primary" id="pick-btn">Open workspace folder</button>
-        <button type="button" id="rescan-btn">Rescan</button>
-        <button type="button" id="copy-btn">Copy pack</button>
-        <button type="button" id="brief-btn" title="Short paste for a new LM session">Copy briefing</button>
-        <button type="button" id="download-btn">Download .md</button>
-        <button type="button" id="demo-good" title="No folder needed">Demo: healthy</button>
-        <button type="button" id="demo-bad" title="No folder needed">Demo: sick</button>
+      <div class="actions-wrap">
+        <div class="actions">
+          <button type="button" class="primary" id="pick-btn">Open workspace folder</button>
+          <button type="button" id="rescan-btn">Rescan</button>
+          <button type="button" id="copy-btn">Copy pack</button>
+          <button type="button" id="brief-btn" title="Short paste for a new LM session">Copy briefing</button>
+          <button type="button" id="download-btn">Download .md</button>
+          <button type="button" id="demo-good" title="No folder needed">Demo: healthy</button>
+          <button type="button" id="demo-bad" title="No folder needed">Demo: sick</button>
+        </div>
+        <p id="privacy-note" class="privacy-note"></p>
       </div>
     </header>
     <main>
@@ -74,7 +80,8 @@
       </section>
     </main>
     <footer>
-      Local-first · HTTPS · no account · Folder access stays on your machine ·
+      Local-first · no account · folder stay on device · process files only (not full-code review) ·
+      CLI: <code>npm run scan -- &lt;workspace&gt;</code> ·
       <a href="https://github.com/moollc/scopegate" style="color: inherit">source</a>
     </footer>
     <script type="module" src="source/app/app.js"></script>

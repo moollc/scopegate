@@ -1,5 +1,5 @@
 import { pickWorkspace, readTextFile, mapFromWebkitFiles } from '../shared/file-bridge.js';
-import { context, folderPickHint } from '../shared/permissions.js';
+import { context, folderPickHint, privacyFootnote, confirmLocalFileListPick } from '../shared/permissions.js';
 import {
   analyzeWorkspace,
   RULE_CANDIDATES,
@@ -11,6 +11,24 @@ import { state, setReport, setError } from './state.js';
 
 const $ = (id) => document.getElementById(id);
 
+function accessBlurb() {
+  if (state.demoMode) return 'demo fixtures (no folder)';
+  if (state.accessMode === 'directory-handle') {
+    return 'local folder grant · read-only · process paths only · nothing uploaded';
+  }
+  if (state.accessMode === 'local-file-list') {
+    const n = state.listedFileCount;
+    const bulk =
+      n > 2000
+        ? ` · browser listed ${n} files (prefer Chrome folder grant or CLI for huge trees)`
+        : n > 0
+          ? ` · browser listed ${n} paths; only process files scored`
+          : '';
+    return `local only (no server)${bulk} · dialog may say “Upload” — that is not a cloud upload`;
+  }
+  return '';
+}
+
 function render() {
   const status = $('status');
   const scoresEl = $('scores');
@@ -18,6 +36,8 @@ function render() {
   const packEl = $('pack');
   const gradeEl = $('grade');
   const hasPack = Boolean(state.report?.coldStart);
+  const privacy = $('privacy-note');
+  if (privacy) privacy.textContent = privacyFootnote();
 
   const briefBtn = $('brief-btn');
   $('copy-btn').disabled = !hasPack;
@@ -29,7 +49,10 @@ function render() {
   const briefEl = $('brief');
 
   if (state.scanning) {
-    status.textContent = 'Scanning…';
+    status.textContent =
+      state.accessMode === 'local-file-list'
+        ? 'Reading process files only (local)…'
+        : 'Scanning local process files…';
     status.dataset.tone = 'muted';
     return;
   }
@@ -59,7 +82,9 @@ function render() {
   }
 
   const r = state.report;
-  const mode = state.demoMode ? `demo · ${r.rootName}` : `Scanned: ${r.rootName}`;
+  const mode = state.demoMode
+    ? `Demo · ${r.rootName}`
+    : `Scanned: ${r.rootName} · ${accessBlurb()}`;
   status.textContent = mode;
   status.dataset.tone = 'ok';
   gradeEl.textContent = r.grade;
@@ -184,6 +209,8 @@ async function runScan(pick) {
   state.scanning = true;
   state.demoMode = false;
   state.error = null;
+  state.accessMode = pick.access || (pick.kind === 'handle' ? 'directory-handle' : 'local-file-list');
+  state.listedFileCount = pick.kind === 'files' ? pick.files?.length || 0 : 0;
   render();
   try {
     let report;
@@ -198,6 +225,13 @@ async function runScan(pick) {
       state.webkitRootName = pick.rootName;
       state.canRescan = true;
       report = await scanFromWebkitFiles(pick.rootName, pick.files);
+      const n = pick.files?.length || 0;
+      if (n > 2000) {
+        report.findings = [
+          ...(report.findings || []),
+          `Browser handed ${n} file entries for this folder pick. Scopegate only scored process paths — for large monorepos prefer Chrome/Edge directory picker or: npm run scan -- <workspace-parent>`,
+        ];
+      }
     }
     setReport(report);
   } catch (e) {
@@ -210,7 +244,9 @@ async function runScan(pick) {
 
 async function onPick() {
   try {
-    const pick = await pickWorkspace();
+    const pick = await pickWorkspace({
+      beforeFileListPick: () => confirmLocalFileListPick(),
+    });
     await runScan(pick);
   } catch (e) {
     if (e?.name === 'AbortError') return;
@@ -256,12 +292,13 @@ function onDownload() {
 
 async function onRescan() {
   if (state.dirHandle) {
-    await runScan({ kind: 'handle', handle: state.dirHandle });
+    await runScan({ kind: 'handle', handle: state.dirHandle, access: 'directory-handle' });
   } else if (state.webkitFiles?.length) {
     await runScan({
       kind: 'files',
       rootName: state.webkitRootName || 'workspace',
       files: state.webkitFiles,
+      access: 'local-file-list',
     });
   }
 }
@@ -272,6 +309,8 @@ function onDemo(kind) {
   if (!fix) return;
   state.dirHandle = null;
   state.webkitFiles = null;
+  state.accessMode = null;
+  state.listedFileCount = 0;
   state.canRescan = false;
   state.demoMode = true;
   state.error = null;
@@ -281,7 +320,12 @@ function onDemo(kind) {
 
 export function boot() {
   state.canRescan = false;
-  $('pick-btn').addEventListener('click', onPick);
+  const pickBtn = $('pick-btn');
+  if (pickBtn) {
+    pickBtn.title =
+      'Choose a local workspace folder. Read-only. Nothing is uploaded to a server. Only process files are scored.';
+  }
+  pickBtn.addEventListener('click', onPick);
   $('copy-btn').addEventListener('click', onCopy);
   const briefBtn = $('brief-btn');
   if (briefBtn) briefBtn.addEventListener('click', onCopyBrief);
