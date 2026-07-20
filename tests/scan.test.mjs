@@ -3,25 +3,51 @@ import assert from 'node:assert/strict';
 import {
   analyzeWorkspace,
   looksLikeAgentsStub,
+  classifyHostFile,
   pinSlice,
+  hasResumePin,
+  agentsLooksInverted,
   demoFixtures,
 } from '../source/app/scan.js';
 
-describe('looksLikeAgentsStub', () => {
-  it('detects @AGENTS.md import', () => {
-    assert.equal(looksLikeAgentsStub('@AGENTS.md\n\nextra note\n'), true);
+describe('classifyHostFile', () => {
+  it('detects @AGENTS stub', () => {
+    assert.equal(classifyHostFile('@AGENTS.md\n\nextra\n'), 'stub');
+    assert.equal(looksLikeAgentsStub('@AGENTS.md\n'), true);
   });
-  it('flags large duplicate rulebook', () => {
-    assert.equal(looksLikeAgentsStub('x'.repeat(5000)), false);
+  it('detects START HERE index like onboardin CLAUDE', () => {
+    const t =
+      '# X\n\n## START HERE (read in order)\n\n0. **`AGENTS.md`** binding.\n1. work/comms.md\n\n' +
+      'more\n'.repeat(100);
+    assert.equal(classifyHostFile(t), 'index');
+  });
+  it('flags pure fork', () => {
+    assert.equal(classifyHostFile('rules only no agents\n' + 'x'.repeat(5000)), 'fork');
+  });
+});
+
+describe('pins', () => {
+  it('detects PINNED cold start', () => {
+    assert.equal(hasResumePin('## 📌 PINNED: Cold start — agent briefing\n'), true);
+  });
+  it('detects PINNED Resume pin', () => {
+    assert.equal(hasResumePin('## PINNED: Resume pin\n'), true);
+  });
+});
+
+describe('inverted AGENTS', () => {
+  it('flags thin AGENTS that defers to CLAUDE', () => {
+    const a =
+      '# app\n\nFull process lives in `CLAUDE.md` + `GEMINI.md`.\n\n## Cold start\n1. CLAUDE\n';
+    assert.equal(agentsLooksInverted(a), true);
   });
 });
 
 describe('analyzeWorkspace', () => {
-  it('grades healthy demo as A/B', () => {
+  it('grades healthy demo A/B', () => {
     const r = analyzeWorkspace(demoFixtures().healthy);
     assert.ok(['A', 'B'].includes(r.grade), r.grade);
     assert.ok(r.coldStart.includes('Cold Start Pack'));
-    assert.ok(r.scores.some((s) => s.id === 'pin' && s.ok));
   });
 
   it('grades sick demo poorly', () => {
@@ -30,7 +56,15 @@ describe('analyzeWorkspace', () => {
     assert.ok(r.findings.length >= 2);
   });
 
-  it('pin slice is smaller than full dump', () => {
+  it('layered onboardin-like: index not hard fork', () => {
+    const r = analyzeWorkspace(demoFixtures().layered);
+    const fork = r.scores.find((s) => s.id === 'rulebook-fork');
+    assert.ok(fork?.ok, 'index should be ok: ' + fork?.detail);
+    assert.ok(r.scores.find((s) => s.id === 'comms-size' && !s.ok));
+    assert.ok(r.metrics.fullTok > r.metrics.coldTok);
+  });
+
+  it('pin slice smaller than dump', () => {
     const full = '## Resume pin\nfocus\n\n' + 'old\n'.repeat(5000);
     assert.ok(pinSlice(full).length < full.length);
   });

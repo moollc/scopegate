@@ -26,6 +26,17 @@ npm test
 
 Opens `https://localhost:<port>` (Chrome/Edge for folder picker).
 
+## Headless scan (agents / CI)
+
+From a **workspace parent** (folder with `AGENTS.md` / scaffold):
+
+```bash
+npm run scan -- "G:/My Drive/Antigravity/onboardin-workspace"
+npm run scan -- . --json
+npm run scan -- . --pack > cold-start.md
+npm run scan -- . --fail-under=B
+```
+
 ## Verify (workspace kit levels)
 
 From this folder (repo root):
