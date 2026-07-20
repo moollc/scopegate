@@ -6,16 +6,16 @@
     <meta name="theme-color" content="#0f1419" />
     <meta name="description" content="AI workspace process health scan and cold-start pack" />
     <title>Scopegate</title>
-    <link rel="manifest" href="/manifest.json" />
-    <link rel="icon" href="/source/assets/images/icon.svg" type="image/svg+xml" />
-    <link rel="apple-touch-icon" href="/source/assets/images/icon-192.png" />
-    <!-- modulepreload:build-web -->
-    <link rel="modulepreload" href="/source/shared/permissions.js" />
-    <link rel="modulepreload" href="/source/shared/file-bridge.js" />
-    <link rel="modulepreload" href="/source/app/scan.js" />
-    <link rel="modulepreload" href="/source/app/state.js" />
-    <link rel="modulepreload" href="/source/app/app.js" />
-    <link rel="stylesheet" href="/source/app/style.css" />
+    <!-- Relative URLs: work on localhost and project GitHub Pages (…/scopegate/) -->
+    <link rel="manifest" href="manifest.json" />
+    <link rel="icon" href="source/assets/images/icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="source/assets/images/icon-192.png" />
+    <link rel="modulepreload" href="source/shared/permissions.js" />
+    <link rel="modulepreload" href="source/shared/file-bridge.js" />
+    <link rel="modulepreload" href="source/app/scan.js" />
+    <link rel="modulepreload" href="source/app/state.js" />
+    <link rel="modulepreload" href="source/app/app.js" />
+    <link rel="stylesheet" href="source/app/style.css" />
   </head>
   <body>
     <header>
@@ -54,12 +54,16 @@
         <pre id="pack"></pre>
       </section>
     </main>
-    <footer>Local-first · HTTPS · no account · Folder access stays on your machine</footer>
-    <script type="module" src="/source/app/app.js"></script>
+    <footer>
+      Local-first · HTTPS · no account · Folder access stays on your machine ·
+      <a href="https://github.com/moollc/scopegate" style="color: inherit">source</a>
+    </footer>
+    <script type="module" src="source/app/app.js"></script>
     <script>
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/service-worker.js').catch(() => {});
+          const swUrl = new URL('service-worker.js', window.location.href);
+          navigator.serviceWorker.register(swUrl.href).catch(() => {});
         });
       }
     </script>

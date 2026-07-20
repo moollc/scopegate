@@ -40,6 +40,16 @@ npm run scan -- . --fail-under=B
 
 Do not commit machine-specific absolute paths into this repo (docs, samples, or code).
 
+## Live demo (GitHub Pages)
+
+Deployed from **GitHub Actions** on every push to `main` (not a `gh-pages` branch).
+
+- Site: https://moollc.github.io/scopegate/
+- Demos work in the browser without installing anything.
+- **Open workspace folder** needs a Chromium browser; files stay on your machine (File System Access API).
+
+One-time (if the first Actions deploy fails on Pages permissions): repo **Settings → Pages → Source: GitHub Actions**.
+
 ## Verify (workspace kit levels)
 
 From this folder (repo root):
