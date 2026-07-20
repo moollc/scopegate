@@ -2,18 +2,42 @@
 
 [![GitHub](https://img.shields.io/badge/github-moollc%2Fscopegate-blue)](https://github.com/moollc/scopegate)
 
-**Pre-flight for multi-LM workspaces.** Local hybrid PWA: open a workspace folder, get a process grade, copy or download a **cold-start pack** any model should load first.
+**Pre-flight for multi-LM workspaces.** Grade process health, then emit a **cold-start pack** and a short **agent briefing** so models load the right slice — not the whole monorepo or comms archive.
 
 - Is `AGENTS.md` thin enough?
 - Pin-first vs comms dump (full vs pin-slice tokens)?
 - Host stubs (`@AGENTS.md`) vs forked rulebooks?
-- Kit cues (verify / MULTI-CLI) when present?
+- Kit / multi-agent cues when present?
 
 No account. Folder access stays on your machine. Demos work without picking a folder.
 
-## Run
+## Using with an LM (agent-first)
 
-Prerequisites (once per machine): Node 18+, [mkcert](https://github.com/FiloSottile/mkcert).
+Pointing a model at this repo alone is **not** enough. Scopegate needs a **scan target** (their workspace parent) and a **job**.
+
+1. Clone or open this repo.
+2. Run a scan on the **workspace parent** (folder with `AGENTS.md` and/or `scaffold` / `work` — not only the app git subfolder, unless that *is* the workspace).
+3. Hand the model the **briefing** (or full pack) and tell it to obey that for the session.
+
+```bash
+cd scopegate   # this repo
+npm run scan -- "/path/to/your-workspace" --brief
+```
+
+**Prompt you can paste to any LM:**
+
+> Use Scopegate (https://github.com/moollc/scopegate): run `npm run scan -- <workspace-parent> --brief`, then follow that briefing for this session. Prefer tools (grep/read) over pasting whole logs or archives. Do not dump the monorepo into context.
+
+| Thing | Role |
+|-------|------|
+| This repo | Scanner + CLI + docs |
+| Their workspace parent | Scan target |
+| `--brief` | Short paste for session start |
+| `--pack` | Full cold-start markdown |
+
+## Run (local UI)
+
+Prerequisites (once per machine): Node 18+, [mkcert](https://github.com/FiloSottile/mkcert) for local HTTPS.
 
 ```bat
 start.bat
@@ -24,33 +48,31 @@ npm start
 npm test
 ```
 
-Opens `https://localhost:<port>` (Chrome/Edge for folder picker).
+Opens `https://localhost:<port>`.
 
 ## Headless scan (agents / CI)
 
-From a **workspace parent** (folder with `AGENTS.md` / scaffold):
-
 ```bash
-# Pass any workspace *parent* (folder with AGENTS.md / work or scaffold). Use your paths.
+# Use *your* paths — do not commit machine-specific absolute paths into this repo
 npm run scan -- "/path/to/your-workspace"
 npm run scan -- . --json
-npm run scan -- . --brief              # short paste for a new LM session
+npm run scan -- . --brief
 npm run scan -- . --pack > cold-start.md
 npm run scan -- . --fail-under=B
 ```
 
-Do not commit machine-specific absolute paths into this repo (docs, samples, or code).
+Scanning `.` inside *this* repo grades the product folder, not a full multi-LM workspace parent. Point at the workspace you care about.
 
 ## Live demo (GitHub Pages)
 
-Deployed from **GitHub Actions** on every push to `main` (not a `gh-pages` branch).
+Deployed from **GitHub Actions** on push to `main`.
 
 - Site: https://moollc.github.io/scopegate/
-- Demos work in the browser without installing anything.
-- **Open workspace folder** uses the File System Access API when available, otherwise the browser’s folder upload (`webkitdirectory`). Files stay on your machine either way.
-- If folder pick still fails, use demos on the page or `npm run scan` locally.
+- Demos work without installing anything.
+- Folder open uses File System Access when available, else browser folder upload. Files stay local.
+- If folder pick fails: use demos or `npm run scan` locally.
 
-One-time (if the first Actions deploy fails on Pages permissions): repo **Settings → Pages → Source: GitHub Actions**.
+Pages source (one-time): repo **Settings → Pages → Source: GitHub Actions**.
 
 ## Verify (workspace kit levels)
 
@@ -64,13 +86,4 @@ node scripts/verify-workspace.mjs --level=app
 
 ## Local ignore
 
-Use `.git/info/exclude` (do not commit `.gitignore`):
-
-```
-build/certs/
-node_modules/
-.env
-target/
-pipeline/deploy/
-```
-
+`.gitignore` already covers `build/certs/` and `pipeline/deploy/`. Do not commit certs or deploy trees.
