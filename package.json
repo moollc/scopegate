@@ -1,0 +1,15 @@
+{
+  "name": "scopegate",
+  "version": "1.1.0",
+  "description": "Pre-flight instrument for multi-LM workspaces: process health + cold-start pack",
+  "type": "module",
+  "scripts": {
+    "start": "node build/scripts/launcher.js",
+    "dev": "node build/scripts/launcher.js --dev",
+    "build": "node build/scripts/build-web.js",
+    "verify": "node scripts/verify-workspace.mjs",
+    "test": "node --test tests/scan.test.mjs"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}
