@@ -1,5 +1,8 @@
 export const state = {
   dirHandle: null,
+  webkitFiles: null,
+  webkitRootName: null,
+  canRescan: false,
   report: null,
   error: null,
   scanning: false,
