@@ -1,4 +1,5 @@
 # Deploy static Scopegate UI to GitHub Pages (project site).
+# Pages source must be GitHub Actions (Settings ? Pages).
 # Repo Settings → Pages → Source: GitHub Actions (one-time if not already set).
 name: Deploy Pages
 
