@@ -43,24 +43,9 @@ export function privacyFootnote() {
 }
 
 /**
- * Confirm before webkitdirectory path — OS wording is scary and wrong for our product.
- * @returns {boolean}
+ * Non-blocking note for file-list path. Do NOT use window.confirm here —
+ * it consumes user activation and can make the next folder picker a no-op.
  */
-export function confirmLocalFileListPick() {
-  return window.confirm(
-    [
-      'This browser will open a folder picker.',
-      '',
-      'It may say “Upload” or “Upload folder.” That is the browser’s label only.',
-      'Nothing is sent to a server — files stay in this tab on your machine.',
-      '',
-      'Scopegate only reads process files (AGENTS.md, comms/pin, kit cues).',
-      'It does not review or upload your whole codebase.',
-      '',
-      'For a true local folder permission (no full-tree handoff), use Chrome or Edge over HTTPS, or run:',
-      '  npm run scan -- /path/to/workspace',
-      '',
-      'Continue with local folder pick?',
-    ].join('\n'),
-  );
+export function fileListPickNote() {
+  return 'Local folder only — browser may say “Upload” (not the cloud). Process files scored only.';
 }

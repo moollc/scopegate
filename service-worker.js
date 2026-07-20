@@ -1,6 +1,7 @@
 /* Relative to SW URL so project Pages (…/repo/) and localhost both work */
 const SCOPE = self.registration.scope;
-const CACHE = 'scopegate-__CACHE_VERSION__';
+/* Bump when shipping UI/picker fixes so Pages clients drop stale JS */
+const CACHE = 'scopegate-v1.5.2';
 
 function asset(path) {
   return new URL(path.replace(/^\//, ''), SCOPE).href;
